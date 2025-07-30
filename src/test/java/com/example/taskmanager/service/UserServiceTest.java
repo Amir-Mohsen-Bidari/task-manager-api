@@ -4,6 +4,8 @@ import com.example.taskmanager.dto.AuthResponse;
 import com.example.taskmanager.dto.RegisterRequest;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.repository.UserRepository;
+import com.example.taskmanager.service.impl.UserServiceImp;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -18,15 +20,15 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
-    
+
     @Mock
     private UserRepository userRepository;
-    
+
     @Mock
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
-    private UserService userService;
+    private UserServiceImp userService;
 
     @Captor
     private ArgumentCaptor<User> userCaptor;
@@ -36,11 +38,11 @@ class UserServiceTest {
         // given
         RegisterRequest request = new RegisterRequest("john@example.com", "john", "password");
 
-        when(userRepository.existsByEmail(request.getEmail())).thenReturn(false);
-        when(passwordEncoder.encode(request.getPassword())).thenReturn("encodedPassword");
+        when(userRepository.existsByEmail(request.email())).thenReturn(false);
+        when(passwordEncoder.encode(request.password())).thenReturn("encodedPassword");
 
         // when
-        AuthResponse response = userService.registerUser(request);
+        AuthResponse response = userService.register(request);
 
         // then
         verify(userRepository).save(userCaptor.capture());
@@ -51,5 +53,5 @@ class UserServiceTest {
         assertEquals("encodedPassword", savedUser.getPassword());
         assertNotNull(response.token()); // Will implement JWT later
     }
-    
+
 }
