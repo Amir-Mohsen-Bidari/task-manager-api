@@ -1,6 +1,7 @@
 package com.example.taskmanager.service;
 
 import com.example.taskmanager.dto.AuthResponse;
+import com.example.taskmanager.dto.LoginRequest;
 import com.example.taskmanager.dto.RegisterRequest;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.repository.UserRepository;
@@ -17,6 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+
+import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -52,6 +55,28 @@ class UserServiceTest {
         assertEquals("john", savedUser.getName());
         assertEquals("encodedPassword", savedUser.getPassword());
         assertNotNull(response.token()); // Will implement JWT later
+    }
+
+    @Test
+    void shouldLoginUserSuccessfully() {
+        // given
+        String email = "john@example.com";
+        String rawPassword = "password123";
+        String hashedPassword = "hashedPassword";
+
+        LoginRequest request = new LoginRequest(email, rawPassword);
+
+        User user = new User(email, "John", hashedPassword);
+
+        when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(rawPassword, hashedPassword)).thenReturn(true);
+
+        // when
+        AuthResponse response = userService.login(request);
+
+        // then
+        assertNotNull(response);
+        assertEquals("mock-jwt-token", response.token()); // Placeholder for now
     }
 
 }
