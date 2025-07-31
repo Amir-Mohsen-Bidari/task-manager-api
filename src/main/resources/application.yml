@@ -9,10 +9,10 @@ spring:
     show-sql: true
     properties:
       hibernate:
-        format_sql: true
+        format-sql: true
   jackson:
     serialization:
-      INDENT_OUTPUT: true
+      indent-output: true
   sql:
     init:
       platform: postgres
