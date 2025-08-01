@@ -5,7 +5,8 @@ import com.example.taskmanager.dto.LoginRequest;
 import com.example.taskmanager.dto.RegisterRequest;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.repository.UserRepository;
-import com.example.taskmanager.service.impl.UserServiceImp;
+import com.example.taskmanager.security.JwtService;
+import com.example.taskmanager.service.impl.UserServiceImpl;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,18 +32,26 @@ class UserServiceTest {
     private PasswordEncoder passwordEncoder;
 
     @InjectMocks
-    private UserServiceImp userService;
+    private UserServiceImpl userService;
 
     @Captor
     private ArgumentCaptor<User> userCaptor;
 
+    @Mock
+    private JwtService jwtService;
+
     @Test
     void shouldRegisterUserSuccessfully() {
         // given
-        RegisterRequest request = new RegisterRequest("john@example.com", "john", "password");
+        String email = "john@example.com";
+        String rawPassword = "password123";
+        String hashedPassword = "encodedPassword";
+        String name = "john";
+        RegisterRequest request = new RegisterRequest(email, name, rawPassword);
 
         when(userRepository.existsByEmail(request.email())).thenReturn(false);
-        when(passwordEncoder.encode(request.password())).thenReturn("encodedPassword");
+        when(passwordEncoder.encode(request.password())).thenReturn(hashedPassword);
+        when(jwtService.generateToken(email)).thenReturn("mock-jwt-token");
 
         // when
         AuthResponse response = userService.register(request);
@@ -54,7 +63,10 @@ class UserServiceTest {
         assertEquals("john@example.com", savedUser.getEmail());
         assertEquals("john", savedUser.getName());
         assertEquals("encodedPassword", savedUser.getPassword());
-        assertNotNull(response.token()); // Will implement JWT later
+        assertNotNull(response);
+        assertEquals("mock-jwt-token", response.token());
+        verify(jwtService).generateToken(email);
+        verifyNoMoreInteractions(userRepository, passwordEncoder, jwtService);
     }
 
     @Test
@@ -70,13 +82,18 @@ class UserServiceTest {
 
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(rawPassword, hashedPassword)).thenReturn(true);
+        when(jwtService.generateToken(email)).thenReturn("mock-jwt-token");
 
         // when
         AuthResponse response = userService.login(request);
 
         // then
         assertNotNull(response);
-        assertEquals("mock-jwt-token", response.token()); // Placeholder for now
+        assertEquals("mock-jwt-token", response.token());
+        verify(userRepository).findByEmail(email);
+        verify(passwordEncoder).matches(rawPassword, hashedPassword);
+        verify(jwtService).generateToken(email);
+        verifyNoMoreInteractions(userRepository, passwordEncoder, jwtService);
     }
 
 }

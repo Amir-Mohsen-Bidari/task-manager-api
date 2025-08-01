@@ -8,16 +8,18 @@ import com.example.taskmanager.dto.LoginRequest;
 import com.example.taskmanager.dto.RegisterRequest;
 import com.example.taskmanager.model.User;
 import com.example.taskmanager.repository.UserRepository;
+import com.example.taskmanager.security.JwtService;
 import com.example.taskmanager.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-public class UserServiceImp implements UserService {
+public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     @Override
     public AuthResponse register(RegisterRequest request) {
@@ -26,12 +28,11 @@ public class UserServiceImp implements UserService {
         }
 
         String hashed = passwordEncoder.encode(request.password());
-
         User user = new User(request.email(), request.name(), hashed);
         userRepository.save(user);
 
-        // Placeholder token
-        return new AuthResponse("mock-jwt-token");
+        String token = jwtService.generateToken(user.getEmail());
+        return new AuthResponse(token);
     }
 
     @Override
@@ -43,8 +44,7 @@ public class UserServiceImp implements UserService {
             throw new IllegalArgumentException("Invalid credentials");
         }
 
-        // Placeholder token
-        return new AuthResponse("mock-jwt-token");
+        String token = jwtService.generateToken(user.getEmail());
+        return new AuthResponse(token);
     }
-
 }

@@ -18,3 +18,6 @@ spring:
       platform: postgres
 server:
   port: 8080
+jwt:
+  secret: my-super-secret-key-which-should-be-long-enough-and-secure
+  expiration: 86400000 # 1 day in milliseconds
